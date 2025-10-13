@@ -30,7 +30,7 @@ cmake --build .
 ```bash
 ./two_q_cache
 ```
-7) **Or run `tests`
+7) Run `tests`
 ```bash
 ./cache_tests
 ```
