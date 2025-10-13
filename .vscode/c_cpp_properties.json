@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/**",                // все локальные файлы
+        "${workspaceFolder}/include",           // твой include/
+        "${workspaceFolder}/build/_deps/googletest-src/googletest/include",  // путь к GTest после FetchContent
+        "${workspaceFolder}/build/_deps/googletest-src/googlemock/include"   // путь к GMock (используется внутри GTest)
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/g++",  // путь к твоему компилятору
+      "cStandard": "c17",
+      "cppStandard": "c++23",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}
