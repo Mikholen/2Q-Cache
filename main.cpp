@@ -19,8 +19,8 @@ int main () {
         cache.place_element (page_id, page);
     }
     
-    std::size_t n_hit = 0;
-    std::cin >> n_hit;
-    std::cout << "N cache hit : " << cache.n_cache_hit << "/" << n_hit << std::endl;
+    // std::size_t n_hit = 0;
+    // std::cin >> n_hit;
+    // std::cout << "N cache hit : " << cache.n_cache_hit << "/" << n_hit << std::endl;
     return 0;
 }

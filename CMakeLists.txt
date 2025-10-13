@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(final ./main.cpp)
-target_include_directories(final PRIVATE include)
+add_executable(two_q_cache ./main.cpp)
+target_include_directories(two_q_cache PRIVATE include)
 
 include(FetchContent)
 FetchContent_Declare(
