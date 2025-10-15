@@ -40,7 +40,7 @@ cmake --build .
 ├── CMakeLists.txt
 ├── include
 │   ├── cache.hpp 
-├── main_2q.cpp
+├── main.cpp
 └── tests
     ├── test_cache.cpp
 ```
