@@ -2,3 +2,4 @@
 *.exe
 final
 build
+.vscode
