@@ -1,44 +1,33 @@
 #pragma once
 #include <list>
 #include <unordered_map>
-#include <assert.h>
+#include <cassert>
+#include <utility>
 
 template <typename key_T, typename val_T>
 class TwoQCache {
 
-    using ListIt_key_val = typename std::list<std::pair<key_T, val_T>>::iterator;
+    using List_key_val   = typename std::list<std::pair<key_T, val_T>>;
+    using ListIt_key_val = typename List_key_val::iterator;
     using ListIt_key     = typename std::list<key_T>::iterator;
 
-    typedef struct queue_with_value {
+    struct queue_with_value {
 
-        size_t queue_size_ = 0;
-        std::list<std::pair<key_T, val_T>> A_list_;
-        std::unordered_map<key_T, ListIt_key_val> A_table_;
+        std::size_t queue_size = 0;
+        List_key_val A_list;
+        std::unordered_map<key_T, ListIt_key_val> A_table;
     } queue_with_value;
 
-    typedef struct queue_no_value {
+    struct queue_no_value {
 
-        size_t queue_size_ = 0;
-        std::list<key_T> A_list_;
-        std::unordered_map<key_T, ListIt_key> A_table_;
+        std::size_t queue_size = 0;
+        std::list<key_T> A_list;
+        std::unordered_map<key_T, ListIt_key> A_table;
     } queue_no_value;
 
-    queue_with_value A1in_;
-    queue_no_value A1out_;
-    queue_with_value Am_;
-
-    template<typename queue_T, typename iter_T>
-    void delete_element (queue_T &Queue, const key_T &key, const iter_T iter) {
-                
-        Queue.A_list_.erase (iter);
-        Queue.A_table_.erase (key);
-    }
-
-    template<typename queue_T, typename el_T, typename iter_T>
-    void add_element (queue_T &Queue, const key_T &key, const el_T element, const iter_T iter) {
-
-        Queue.A_table_[key] = Queue.A_list_.insert (iter, element);
-    }
+    queue_with_value A1in;
+    queue_no_value A1out;
+    queue_with_value Am;
 
     template<typename queue_T, typename el_T, typename iter_T>
     void insert_into_queue (queue_T &Queue, const key_T &key_to_add, const key_T &key_to_delete,
@@ -52,75 +41,73 @@ class TwoQCache {
 
 public:
 
-    explicit TwoQCache (size_t size) 
+    explicit TwoQCache (std::size_t size) 
 
-        : A1in_ { .queue_size_ = size / 4}, A1out_ { .queue_size_ = size / 4}, 
-          Am_ { .queue_size_ = size - (size / 4) * 2}, n_cache_hit(0) {}
+        : A1in { .queue_size = size / 4}, A1out { .queue_size = size / 4}, 
+          Am { .queue_size = size - (size / 4) * 2}, n_cache_hit(0) {}
 
-    explicit TwoQCache (size_t in_size, size_t out_size, size_t main_size) 
+    explicit TwoQCache (std::size_t in_size, std::size_t out_size, std::size_t main_size) 
 
-        : A1in_ { .queue_size_ = in_size}, A1out_ { .queue_size_ = out_size}, 
-          Am_ { .queue_size_ = main_size}, n_cache_hit(0) {}
+        : A1in { .queue_size = in_size}, A1out { .queue_size = out_size}, 
+          Am { .queue_size = main_size}, n_cache_hit(0) {}
 
     std::size_t n_cache_hit;
 
-    void place_element (const key_T key, const val_T value);
-    val_T get_element (const key_T key);
+    void place_element (const key_T &key, const val_T &value);
+    val_T get_element (const key_T &key);
 
-    bool contains_element (const key_T key) {
+    bool contains_element (const key_T &key) {
 
-        if ((A1in_.A_table_.count (key) == 1) || (Am_.A_table_.count (key) == 1))
-            return true;
-        
-        else
-            return false;
+        return ((A1in.A_table.count (key) == 1) || (Am.A_table.count (key) == 1));
     }
 };
 
 template<typename key_T, typename val_T>
-void TwoQCache<key_T, val_T>::place_element (const key_T key, const val_T value) {
+void TwoQCache<key_T, val_T>::place_element (const key_T &key, const val_T &value) {
 
-    assert (A1in_.A_table_.count (key) + A1out_.A_table_.count (key) + Am_.A_table_.count (key) <= 1);
+    assert (A1in.A_table.count (key) + A1out.A_table.count (key) + Am.A_table.count (key) <= 1);
 
-    if (A1in_.A_table_.count (key) == 1) {
+    if (A1in.A_table.count (key) == 1) {
 
-        n_cache_hit++;        
-        delete_element (A1in_, key, A1in_.A_table_[key]);
-        insert_into_queue (Am_, key, (*(Am_.A_list_).begin ()).first, std::make_pair (key, value), Am_.A_list_.end (), Am_.A_list_.begin ());
+        n_cache_hit++;    
+        A1in.A_list.erase (A1in.A_table[key]);
+        A1in.A_table.erase (key);    
+        insert_into_queue (Am, key, (*(Am.A_list).begin ()).first, std::make_pair (key, value), Am.A_list.end (), Am.A_list.begin ());
     }
 
-    else if (A1out_.A_table_.count (key) == 1) {
+    else if (A1out.A_table.count (key) == 1) {
 
-        delete_element (A1out_, key, A1out_.A_table_[key]);
-        insert_into_queue (Am_, key, (*(Am_.A_list_).begin ()).first, std::make_pair (key, value), Am_.A_list_.end (), Am_.A_list_.begin ());           
+        A1out.A_list.erase (A1out.A_table[key]);
+        A1out.A_table.erase (key);
+        insert_into_queue (Am, key, (*(Am.A_list).begin ()).first, std::make_pair (key, value), Am.A_list.end (), Am.A_list.begin ());           
     }
 
-    else if (Am_.A_table_.count (key) == 1) {
+    else if (Am.A_table.count (key) == 1) {
 
         n_cache_hit++;
-        Am_.A_list_.erase (Am_.A_table_[key]);
-        Am_.A_list_.insert (Am_.A_list_.end (), std::make_pair (key, value));
+        Am.A_list.erase (Am.A_table[key]);
+        Am.A_list.insert (Am.A_list.end (), std::make_pair (key, value));
     }
 
     else {
 
-        insert_into_Ain (key, (*(A1in_.A_list_).begin ()).first, std::make_pair (key, value), A1in_.A_list_.end (), A1in_.A_list_.begin ());
+        insert_into_Ain (key, (*(A1in.A_list).begin ()).first, std::make_pair (key, value), A1in.A_list.end (), A1in.A_list.begin ());
     }
 
     // print_all_queues ();
 }
 
 template<typename key_T, typename val_T>
-val_T TwoQCache<key_T, val_T>::get_element (const key_T key) {
+val_T TwoQCache<key_T, val_T>::get_element (const key_T &key) {
 
-    if (A1in_.A_table_.count (key)) {
+    if (A1in.A_table.count (key)) {
 
-        return (*(A1in_.A_table_[key])).second;
+        return (*(A1in.A_table[key])).second;
     }
 
-    else if (Am_.A_table_.count (key)) {
+    else if (Am.A_table.count (key)) {
 
-        return (*(Am_.A_table_[key])).second;
+        return (*(Am.A_table[key])).second;
     }
 
     return 0;
@@ -131,23 +118,23 @@ void TwoQCache<key_T, val_T>::print_all_queues () {
 
     std::cout << "A1in : ";
 
-    for (auto iterator = TwoQCache::A1in_.A_list_.begin (); iterator != TwoQCache::A1in_.A_list_.end (); iterator++) {
+    for (auto &[key, val] : A1in.A_list) {
 
-        std::cout << (*iterator).first << "|" << (*iterator).second << " ";
+        std::cout << key << "|" << val << " ";
     }
 
     std::cout << "\nA1out : ";
     
-    for (auto iterator = TwoQCache::A1out_.A_list_.begin (); iterator != TwoQCache::A1out_.A_list_.end (); iterator++) {
+    for (auto elem : A1out.A_list) {
 
-        std::cout << *iterator << " ";
+        std::cout << elem << " ";
     }
 
     std::cout << "\nAm : ";
     
-    for (auto iterator = TwoQCache::Am_.A_list_.begin (); iterator != TwoQCache::Am_.A_list_.end (); iterator++) {
+    for (auto &[key, val] : Am.A_list) {
 
-        std::cout << (*iterator).first << "|" << (*iterator).second << " ";
+        std::cout << key << "|" << val << " ";
     }
 
     std::cout << '\n';
@@ -158,18 +145,19 @@ template<typename el_T, typename iter_T>
 void TwoQCache<key_T, val_T>::insert_into_Ain (const key_T &key_to_add, const key_T &key_to_delete, const el_T element_to_add, 
                                                const iter_T iter_to_add, const iter_T iter_to_delete) {
 
-    if (A1in_.A_list_.size () < A1in_.queue_size_) {
+    if (A1in.A_list.size () < A1in.queue_size) {
 
-        add_element (A1in_, key_to_add, element_to_add, iter_to_add);
+        A1in.A_table[key_to_add] = Queue.A_list.insert (iter_to_add, element_to_add);
     }
 
     else {
 
-        insert_into_queue (A1out_, key_to_delete, *(A1out_.A_list_).begin (),
-                            key_to_delete, A1out_.A_list_.end (), A1out_.A_list_.begin ());
+        insert_into_queue (A1out, key_to_delete, *(A1out.A_list).begin (),
+                            key_to_delete, A1out.A_list.end (), A1out.A_list.begin ());
 
-        delete_element (A1in_, key_to_delete, iter_to_delete);
-        add_element    (A1in_, key_to_add,    element_to_add, iter_to_add);
+        A1in.A_list.erase (iter_to_delete);
+        A1in.A_table.erase (key_to_delete);
+        A1in.A_table[key_to_add] = Queue.A_list.insert (iter_to_add, element_to_add);
     }
 }
 
@@ -178,14 +166,15 @@ template<typename queue_T, typename el_T, typename iter_T>
 void TwoQCache<key_T, val_T>::insert_into_queue (queue_T &Queue, const key_T &key_to_add, const key_T &key_to_delete,
                         const el_T element_to_add, const iter_T iter_to_add, const iter_T iter_to_delete) {
 
-    if (Queue.A_list_.size () < Queue.queue_size_) {
+    if (Queue.A_list.size () < Queue.queue_size) {
 
-        add_element (Queue, key_to_add, element_to_add, iter_to_add);
+        Queue.A_table[key_to_add] = Queue.A_list.insert (iter_to_add, element_to_add);
     }
 
     else {
 
-        delete_element (Queue, key_to_delete, iter_to_delete);
-        add_element    (Queue, key_to_add,    element_to_add, iter_to_add);
+        Queue.A_list.erase (iter_to_delete);
+        Queue.A_table.erase (key_to_delete);
+        Queue.A_table[key_to_add] = Queue.A_list.insert (iter_to_add, element_to_add);
     }
 }
